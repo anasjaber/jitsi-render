@@ -32,8 +32,7 @@ RUN mkdir -p /config/web /config/transcripts /config/prosody/config \
 WORKDIR /app
 
 # Copy configuration files
-COPY docker-compose.yml /app/
-COPY .env /app/
+COPY docker-compose.yml .env start.sh ./
 
 # Install Docker and Docker Compose
 RUN apt-get update && \
@@ -41,17 +40,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-if [ ! -f ".env" ]; then\n\
-    echo "Error: .env file not found!"\n\
-    exit 1\n\
-fi\n\
-\n\
-# Start Jitsi Meet services\n\
-docker-compose up\n\
-' > /app/start.sh && \
-chmod +x /app/start.sh
+# Make start script executable
+RUN chmod +x /app/start.sh
 
 # Expose ports
 # Web
