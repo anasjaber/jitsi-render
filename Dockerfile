@@ -6,11 +6,12 @@ ENV JITSI_IMAGE_VERSION=stable-10008
 ENV CONFIG=/config
 ENV TZ=UTC
 
-# Copy web configurations
-COPY ./config/web /config/web
+# Create necessary directories
+RUN mkdir -p /config/web /config/transcripts \
+    /config/web/crontabs /config/web/load-test
 
 # Expose ports
 EXPOSE 80 443
 
-# Set default command
+# The jitsi/web image uses /init as its entrypoint
 CMD [ "/init" ]
