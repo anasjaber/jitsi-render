@@ -1,17 +1,10 @@
-# Use jitsi/web as base image
-FROM jitsi/web:stable-10008
+FROM docker/compose:latest
 
-# Set environment variables
-ENV JITSI_IMAGE_VERSION=stable-10008
-ENV CONFIG=/config
-ENV TZ=UTC
+WORKDIR /app
 
-# Create necessary directories
-RUN mkdir -p /config/web /config/transcripts \
-    /config/web/crontabs /config/web/load-test
+# Copy docker-compose file and any other necessary files
+COPY docker-compose.yml .
+COPY .env .
 
-# Expose ports
-EXPOSE 80 443
-
-# The jitsi/web image uses /init as its entrypoint
-CMD [ "/init" ]
+# Command to run docker-compose
+CMD ["docker-compose", "up"]
