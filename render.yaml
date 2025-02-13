@@ -9,55 +9,25 @@ services:
         value: "1"
       - key: ENABLE_GUESTS
         value: "1"
-      - key: PUBLIC_URL
-        fromService:
-          name: jitsi-web
-          type: web
-          property: host
       - key: XMPP_DOMAIN
-        fromService:
-          name: jitsi-web
-          type: web
-          property: host
-      - key: XMPP_SERVER
-        value: "xmpp.meet.jitsi"
-      - key: JICOFO_AUTH_USER
-        value: "focus"
-    healthCheckPath: /
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: ENABLE_HTTP_REDIRECT
+        value: "1"
+      - key: ENABLE_LETSENCRYPT
+        value: "1"
+      - key: LETSENCRYPT_EMAIL
+        sync: false
+      - key: LETSENCRYPT_DOMAIN
+        sync: false
     disk:
       name: jitsi-config
       mountPath: /config
       sizeGB: 10
-
-  - type: web
-    name: prosody
-    env: docker
-    dockerfilePath: ./prosody.Dockerfile
-    envVars:
-      - key: XMPP_DOMAIN
-        fromService:
-          name: jitsi-web
-          type: web
-          property: host
-
-  - type: web
-    name: jicofo
-    env: docker
-    dockerfilePath: ./jicofo.Dockerfile
-    envVars:
-      - key: XMPP_DOMAIN
-        fromService:
-          name: jitsi-web
-          type: web
-          property: host
-
-  - type: web
-    name: jvb
-    env: docker
-    dockerfilePath: ./jvb.Dockerfile
-    envVars:
-      - key: XMPP_DOMAIN
-        fromService:
-          name: jitsi-web
-          type: web
-          property: host
+    healthCheckPath: /about/health
+    ports:
+      - port: 80
+        protocol: http
+      - port: 443
+        protocol: https
