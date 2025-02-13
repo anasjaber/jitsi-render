@@ -1,34 +1,63 @@
 services:
   - type: web
-    name: jitsi-meet
+    name: jitsi-web
     env: docker
-    dockerfilePath: ./Dockerfile
     plan: standard
-    healthCheckPath: /
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: ENABLE_AUTH
         value: "1"
       - key: ENABLE_GUESTS
         value: "1"
-      - key: AUTH_TYPE
-        value: "jwt"
-      - key: XMPP_DOMAIN
-        fromService:
-          name: jitsi-meet
-          type: web
-          envVarKey: RENDER_EXTERNAL_HOSTNAME
       - key: PUBLIC_URL
         fromService:
-          name: jitsi-meet
+          name: jitsi-web
           type: web
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: ENABLE_LETSENCRYPT
-        value: "1"
-      - key: ENABLE_HTTP_REDIRECT
-        value: "1"
-      - key: TZ
-        value: "UTC"
+          property: host
+      - key: XMPP_DOMAIN
+        fromService:
+          name: jitsi-web
+          type: web
+          property: host
+      - key: XMPP_SERVER
+        value: "xmpp.meet.jitsi"
+      - key: JICOFO_AUTH_USER
+        value: "focus"
+    healthCheckPath: /
     disk:
-      name: jitsi-data
-      mountPath: /root/.jitsi-meet-cfg
+      name: jitsi-config
+      mountPath: /config
       sizeGB: 10
+
+  - type: web
+    name: prosody
+    env: docker
+    dockerfilePath: ./prosody.Dockerfile
+    envVars:
+      - key: XMPP_DOMAIN
+        fromService:
+          name: jitsi-web
+          type: web
+          property: host
+
+  - type: web
+    name: jicofo
+    env: docker
+    dockerfilePath: ./jicofo.Dockerfile
+    envVars:
+      - key: XMPP_DOMAIN
+        fromService:
+          name: jitsi-web
+          type: web
+          property: host
+
+  - type: web
+    name: jvb
+    env: docker
+    dockerfilePath: ./jvb.Dockerfile
+    envVars:
+      - key: XMPP_DOMAIN
+        fromService:
+          name: jitsi-web
+          type: web
+          property: host
