@@ -1,0 +1,100 @@
+version: '3'
+
+services:
+  web:
+    image: jitsi/web:latest
+    restart: always
+    volumes:
+      - ${CONFIG}/web:/config:Z
+      - ${CONFIG}/web/crontabs:/var/spool/cron/crontabs:Z
+      - ${CONFIG}/transcripts:/usr/share/jitsi-meet/transcripts:Z
+    environment:
+      - ENABLE_AUTH=${ENABLE_AUTH}
+      - ENABLE_GUESTS=${ENABLE_GUESTS}
+      - ENABLE_LETSENCRYPT=${ENABLE_LETSENCRYPT}
+      - ENABLE_HTTP_REDIRECT=${ENABLE_HTTP_REDIRECT}
+      - ENABLE_TRANSCRIPTIONS=${ENABLE_TRANSCRIPTIONS}
+      - DISABLE_HTTPS=${DISABLE_HTTPS}
+      - JICOFO_AUTH_USER=focus
+      - LETSENCRYPT_DOMAIN=${LETSENCRYPT_DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - PUBLIC_URL=${PUBLIC_URL}
+      - XMPP_DOMAIN=${XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${XMPP_DOMAIN}
+      - XMPP_BOSH_URL_BASE=http://xmpp.${XMPP_DOMAIN}:5280
+      - XMPP_GUEST_DOMAIN=guest.${XMPP_DOMAIN}
+      - XMPP_MUC_DOMAIN=muc.${XMPP_DOMAIN}
+      - TZ=${TZ}
+    networks:
+      meet.jitsi:
+
+  prosody:
+    image: jitsi/prosody:latest
+    restart: always
+    expose:
+      - '5280'
+    volumes:
+      - ${CONFIG}/prosody/config:/config:Z
+      - ${CONFIG}/prosody/prosody-plugins-custom:/prosody-plugins-custom:Z
+    environment:
+      - AUTH_TYPE=jwt
+      - ENABLE_AUTH=${ENABLE_AUTH}
+      - ENABLE_GUESTS=${ENABLE_GUESTS}
+      - GLOBAL_MODULES=${GLOBAL_MODULES}
+      - XMPP_DOMAIN=${XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${XMPP_DOMAIN}
+      - XMPP_GUEST_DOMAIN=guest.${XMPP_DOMAIN}
+      - XMPP_MUC_DOMAIN=muc.${XMPP_DOMAIN}
+      - JWT_APP_ID=${JWT_APP_ID}
+      - JWT_APP_SECRET=${JWT_APP_SECRET}
+      - TZ=${TZ}
+    networks:
+      meet.jitsi:
+        aliases:
+          - xmpp.${XMPP_DOMAIN}
+
+  jicofo:
+    image: jitsi/jicofo:latest
+    restart: always
+    volumes:
+      - ${CONFIG}/jicofo:/config:Z
+    environment:
+      - AUTH_TYPE=jwt
+      - ENABLE_AUTH=${ENABLE_AUTH}
+      - XMPP_DOMAIN=${XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${XMPP_DOMAIN}
+      - XMPP_SERVER=xmpp.${XMPP_DOMAIN}
+      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET}
+      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD}
+      - JWT_APP_ID=${JWT_APP_ID}
+      - JWT_APP_SECRET=${JWT_APP_SECRET}
+      - TZ=${TZ}
+    depends_on:
+      - prosody
+    networks:
+      meet.jitsi:
+
+  jvb:
+    image: jitsi/jvb:latest
+    restart: always
+    ports:
+      - '${JVB_PORT}:${JVB_PORT}/udp'
+      - '${JVB_TCP_PORT}:${JVB_TCP_PORT}'
+    volumes:
+      - ${CONFIG}/jvb:/config:Z
+    environment:
+      - XMPP_AUTH_DOMAIN=auth.${XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${XMPP_DOMAIN}
+      - XMPP_SERVER=xmpp.${XMPP_DOMAIN}
+      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD}
+      - JVB_PORT=${JVB_PORT}
+      - JVB_TCP_PORT=${JVB_TCP_PORT}
+      - TZ=${TZ}
+    depends_on:
+      - prosody
+    networks:
+      meet.jitsi:
+
+networks:
+  meet.jitsi:
